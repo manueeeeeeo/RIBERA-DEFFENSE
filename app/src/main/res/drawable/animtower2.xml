@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false">
+    <item android:drawable="@drawable/tower21" android:duration="225"/>
+    <item android:drawable="@drawable/tower22" android:duration="225"/>
+    <item android:drawable="@drawable/tower23" android:duration="225"/>
+    <item android:drawable="@drawable/tower24" android:duration="225"/>
+
+    <item android:drawable="@drawable/tower21" android:duration="225"/>
+    <item android:drawable="@drawable/tower22" android:duration="225"/>
+    <item android:drawable="@drawable/tower23" android:duration="225"/>
+    <item android:drawable="@drawable/tower24" android:duration="225"/>
+
+    <item android:drawable="@drawable/tower21" android:duration="225"/>
+    <item android:drawable="@drawable/tower22" android:duration="225"/>
+    <item android:drawable="@drawable/tower23" android:duration="225"/>
+    <item android:drawable="@drawable/tower24" android:duration="225"/>
+
+    <item android:drawable="@drawable/tower21" android:duration="225"/>
+    <item android:drawable="@drawable/tower22" android:duration="225"/>
+    <item android:drawable="@drawable/tower23" android:duration="225"/>
+    <item android:drawable="@drawable/tower24" android:duration="225"/>
+
+    <item android:drawable="@drawable/tower21" android:duration="225"/>
+    <item android:drawable="@drawable/tower22" android:duration="225"/>
+    <item android:drawable="@drawable/tower23" android:duration="225"/>
+    <item android:drawable="@drawable/tower24" android:duration="225"/>
+
+    <item android:drawable="@drawable/tower21" android:duration="225"/>
+    <item android:drawable="@drawable/tower22" android:duration="225"/>
+    <item android:drawable="@drawable/tower23" android:duration="225"/>
+    <item android:drawable="@drawable/tower24" android:duration="225"/>
+
+    <item android:drawable="@drawable/tower21" android:duration="225"/>
+    <item android:drawable="@drawable/tower22" android:duration="225"/>
+    <item android:drawable="@drawable/tower23" android:duration="225"/>
+    <item android:drawable="@drawable/tower24" android:duration="225"/>
+</animation-list>
