@@ -5,15 +5,15 @@ import android.graphics.Paint;
 
 import java.util.ArrayList;
 
-public class Enemy {
-    private ArrayList<int[]> waypoints;
-    private int x;
-    private int y;
-    private int health;
-    private int speed;
-    private int score;
-    private int currentWaypointIndex = 0;
-    private boolean isAlive = true;
+public abstract class Enemy {
+    public ArrayList<int[]> waypoints;
+    public int x;
+    public int y;
+    public int health;
+    public int speed;
+    public int score;
+    public int currentWaypointIndex = 0;
+    public boolean isAlive = true;
 
     public Enemy(ArrayList<int[]> waypoints, int health, int speed, int score){
         this.waypoints = waypoints;
@@ -41,7 +41,7 @@ public class Enemy {
         }
     }
 
-    //public void draw(Canvas canvas, Paint paint);
+    public abstract void draw(Canvas canvas, Paint paint);
 
     public ArrayList<int[]> getWaypoints() {
         return waypoints;
