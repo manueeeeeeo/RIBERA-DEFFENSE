@@ -8,7 +8,7 @@
     tools:context=".Inicio">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/imageViewFondo"
         android:layout_width="737dp"
         android:layout_height="414dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -17,4 +17,39 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.666"
         app:srcCompat="@drawable/startingbackground" />
+
+    <ImageView
+        android:id="@+id/imageViewPlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/imageViewFondo"
+        app:layout_constraintHorizontal_bias="0.34"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.69"
+        app:srcCompat="@drawable/buttonplay" />
+
+    <ImageView
+        android:id="@+id/imageViewMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.667"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.69"
+        app:srcCompat="@drawable/buttonmenu" />
+
+    <ImageView
+        android:id="@+id/imageViewExit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/imageViewFondo"
+        app:layout_constraintVertical_bias="0.905"
+        app:srcCompat="@drawable/buttonexit" />
 </androidx.constraintlayout.widget.ConstraintLayout>
