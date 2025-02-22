@@ -2,9 +2,12 @@ package com.clase.riberadeffense;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.MotionEvent;
@@ -46,6 +49,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private static final int TOTAL_WAVES = 5;
     private int currentWave = 0;
 
+    private Bitmap fondo;
+    private Rect rectFondo;
+
     public GameEngine(Context context) {
         super(context);
         getHolder().addCallback(this);
@@ -53,6 +59,8 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         try {
             databaseHelper = new DatabaseHelper(context);
             handler = new Handler();
+
+            fondo = BitmapFactory.decodeResource(getResources(), R.drawable.fondo1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -67,7 +75,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             towers = databaseHelper.getAllTowers(getContext());
 
             for (Tower tower : towers) {
-                tower.startAnimation();
+                if(tower.getLevel() == 2 && tower.getLevel() == 3){
+                    tower.startAnimation();
+                }
             }
 
             lastSpawnTime = System.currentTimeMillis();
@@ -80,6 +90,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        if (fondo != null) {
+            rectFondo = new Rect(0, 0, width, height);
+        }
     }
 
     @Override
@@ -99,8 +112,13 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
+
         Paint paint = new Paint();
         canvas.drawColor(Color.BLACK);
+
+        if (fondo != null && rectFondo != null) {
+            canvas.drawBitmap(fondo, null, rectFondo, null);
+        }
 
         if (towers != null) {
             for (Tower tower : towers) {
