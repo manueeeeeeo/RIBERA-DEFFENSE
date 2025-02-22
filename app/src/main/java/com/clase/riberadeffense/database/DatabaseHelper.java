@@ -58,7 +58,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Insertar dinero inicial
         ContentValues values = new ContentValues();
         values.put(COLUMN_ID, 1);
-        values.put(COLUMN_AMOUNT, 50); // Dinero inicial
+        values.put(COLUMN_AMOUNT, 200); // Dinero inicial
         db.insert(TABLE_MONEY, null, values);
     }
 
@@ -126,7 +126,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor != null) cursor.close();
     }
 
-    public List<Tower> getAllTowers() {
+    public List<Tower> getAllTowers(Context context) {
         List<Tower> towers = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_TOWERS, null, null, null, null, null, null);
@@ -140,13 +140,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 int attackSpeed = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TOWER_RAPIDEZ));
                 int x = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TOWER_X));
                 int y = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TOWER_Y));
+                boolean isUnlocked = level > 0;
 
-                Tower tower = new BasicTower(x, y, null);
-                tower.setId(id);
-                tower.setLevel(level);
-                tower.setDamage(damage);
-                tower.setRange(range);
-                tower.setAttackSpeed(attackSpeed);
+                Tower tower = new Tower(x, y, range, level, damage, attackSpeed, id, context);
+                tower.setUnlocked(isUnlocked);
                 towers.add(tower);
             } while (cursor.moveToNext());
         }
