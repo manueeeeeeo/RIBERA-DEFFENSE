@@ -6,13 +6,21 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.Toast;
 
+import com.clase.riberadeffense.modelos.BasicEnemy;
+import com.clase.riberadeffense.modelos.BossEnemy;
+import com.clase.riberadeffense.modelos.Enemy;
+import com.clase.riberadeffense.modelos.Projectile;
 import com.clase.riberadeffense.modelos.Tower;
 import com.clase.riberadeffense.database.DatabaseHelper;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
@@ -21,8 +29,22 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private DatabaseHelper databaseHelper;
     private int wave = 1;
     private Handler handler;
+    private List<Enemy> enemies = new ArrayList<>();
+    private List<Projectile> projectiles = new ArrayList<>();
     private long lastClickTime = 0;
     private static final long LONG_CLICK_THRESHOLD = 1000;
+
+    private long lastSpawnTime = 0;
+    private static final long SPAWN_INTERVAL = 2000;
+    private int enemiesToSpawn = 5;
+    private int spawnedEnemies = 0;
+
+    private static final long BOSS_SPAWN_DELAY = 2500;
+    private long bossSpawnTimer = 0;
+    private boolean isBossWave = false;
+    private static final int ENEMIES_PER_WAVE = 30;
+    private static final int TOTAL_WAVES = 5;
+    private int currentWave = 0;
 
     public GameEngine(Context context) {
         super(context);
@@ -47,6 +69,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             for (Tower tower : towers) {
                 tower.startAnimation();
             }
+
+            lastSpawnTime = System.currentTimeMillis();
+            enemiesToSpawn = 5;
+            spawnedEnemies = 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -85,6 +111,14 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawText("Error al cargar torres", 50, 500, paint);
         }
 
+        for (Enemy enemy : enemies) {
+            enemy.draw(canvas, paint);
+        }
+
+        for (Projectile projectile : projectiles) {
+            projectile.draw(canvas, paint);
+        }
+
         drawUI(canvas, paint);
     }
 
@@ -95,7 +129,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         paint.setColor(Color.WHITE);
         canvas.drawText(moneyText, 50, 100, paint);
 
-        String waveText = "Oleada: " + wave + "/5";
+        String waveText = "Oleada: " + (currentWave+1) + "/5";
         canvas.drawText(waveText, 50, 170, paint);
     }
 
@@ -136,9 +170,16 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     private void showUpgradeDialog(Tower tower) {
         int upgradeCost = (tower.getLevel() + 1) * 60;
-        String newStats = "Nuevo Nivel: " + (tower.getLevel() + 1) + "\n" +
-                "Nuevo Daño: " + (tower.getDamage() + 10) + "\n" +
-                "Nuevo Rango: " + (tower.getRange() + 5);
+        String newStats;
+        if(tower.getLevel()+1==1){
+            newStats = "Nuevo Nivel: " + (tower.getLevel() + 1) + "\n" +
+                    "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
+                    "Nuevo Rango: " + (tower.getRange() + 100);
+        }else{
+            newStats = "Nuevo Nivel: " + (tower.getLevel() + 1) + "\n" +
+                    "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
+                    "Nuevo Rango: " + (tower.getRange() + 55);
+        }
 
         new AlertDialog.Builder(getContext())
                 .setTitle("Mejorar Torre")
@@ -172,6 +213,113 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
+        long currentTime = System.currentTimeMillis();
+
+        if (!isBossWave && enemies.size() < ENEMIES_PER_WAVE && spawnedEnemies < ENEMIES_PER_WAVE) {
+            if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
+                ArrayList<int[]> path = crearCaminoEnemigo();
+                enemies.add(new BasicEnemy(path, 100, 2, 10));
+                lastSpawnTime = currentTime;
+                spawnedEnemies++;
+            }
+        }
+
+        Iterator<Enemy> enemyIterator = enemies.iterator();
+        while (enemyIterator.hasNext()) {
+            Enemy enemy = enemyIterator.next();
+            enemy.update();
+
+            if (enemy.getCurrentWaypointIndex() >= enemy.getWaypoints().size()) {
+                enemyIterator.remove();
+                showToast("¡Enemigo ha llegado al final!");
+            }
+        }
+
+        if (!isBossWave && enemies.isEmpty() && spawnedEnemies >= ENEMIES_PER_WAVE) {
+            isBossWave = true;
+            bossSpawnTimer = currentTime;
+        }
+
+        if (isBossWave && currentTime - bossSpawnTimer >= BOSS_SPAWN_DELAY) {
+            ArrayList<int[]> path = crearCaminoEnemigo();
+            enemies.add(new BossEnemy(path, 500, 2, 50));
+            isBossWave = false;
+            spawnedEnemies = 0;
+            currentWave++;
+
+            if (currentWave > TOTAL_WAVES) {
+                showToast("¡Juego acabado!");
+            }
+        }
+
+        Iterator<Projectile> projectileIterator = projectiles.iterator();
+        while (projectileIterator.hasNext()) {
+            Projectile projectile = projectileIterator.next();
+            projectile.update();
+
+            if (!projectile.isActive()) {
+                projectileIterator.remove();
+            }
+        }
+
+        for (Tower tower : towers) {
+            if (!tower.canShoot()) continue;
+
+            Enemy target = null;
+
+            for (Enemy enemy : enemies) {
+                if (tower.isEnemyInRange(enemy)) {
+                    target = enemy;
+                    break;
+                }
+            }
+
+            if (target != null) {
+                boolean hasActiveProjectile = false;
+                for (Projectile projectile : projectiles) {
+                    if (projectile.getTarget() == target) {
+                        hasActiveProjectile = true;
+                        break;
+                    }
+                }
+
+                if (!hasActiveProjectile) {
+                    projectiles.add(new Projectile(tower.getX(), tower.getY(), target, tower.getDamage()));
+                    tower.shoot();
+                }
+            }
+        }
+
+        enemyIterator = enemies.iterator();
+        while (enemyIterator.hasNext()) {
+            Enemy enemy = enemyIterator.next();
+            if (!enemy.isAlive()) {
+                enemyIterator.remove();
+                databaseHelper.updateMoney(databaseHelper.getMoney() + 3);
+            }
+        }
+    }
+
+    private void showToast(final String message) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(() -> Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show());
+    }
+
+    private ArrayList<int[]> crearCaminoEnemigo() {
+        ArrayList<int[]> path = new ArrayList<>();
+        path.add(new int[]{getWidth() - 100, getHeight() / 2});
+        path.add(new int[]{getWidth() - 300, getHeight() / 2});
+        path.add(new int[]{getWidth() - 300, getHeight() / 2 + 200});
+        path.add(new int[]{getWidth() - 600, getHeight() / 2 + 200});
+        path.add(new int[]{getWidth() - 600, getHeight() / 2 - 150});
+        path.add(new int[]{getWidth() - 900, getHeight() / 2 - 150});
+        path.add(new int[]{getWidth() - 900, getHeight() / 2 + 100});
+        path.add(new int[]{getWidth() - 1100, getHeight() / 2 + 100});
+        path.add(new int[]{getWidth() - 1100, getHeight() / 2 - 100});
+        path.add(new int[]{getWidth() - 1400, getHeight() / 2 - 100});
+        path.add(new int[]{getWidth() - 1400, getHeight() / 2});
+        path.add(new int[]{100, getHeight() / 2});
+        return path;
     }
 
     private class MainThread extends Thread {
@@ -193,29 +341,22 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         public void run() {
             Canvas canvas;
             while (running) {
-                long startTime = System.nanoTime();
                 canvas = null;
-
                 try {
-                    canvas = surfaceHolder.lockCanvas();
+                    canvas = this.surfaceHolder.lockCanvas();
                     synchronized (surfaceHolder) {
-                        gameEngine.update();
-                        gameEngine.draw(canvas);
+                        gameEngine.update(); // Actualizar el estado del juego
+                        gameEngine.draw(canvas); // Dibujar el estado actual
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 } finally {
                     if (canvas != null) {
-                        surfaceHolder.unlockCanvasAndPost(canvas);
-                    }
-                }
-
-                long elapsedTime = System.nanoTime() - startTime;
-                long sleepTime = (1000 / 60) - (elapsedTime / 1000000);
-
-                if (sleepTime > 0) {
-                    try {
-                        sleep(sleepTime);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        try {
+                            surfaceHolder.unlockCanvasAndPost(canvas);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
