@@ -13,16 +13,20 @@
         android:theme="@style/Theme.RIBERADEFFENSE"
         tools:targetApi="31">
         <activity
+            android:name=".Ajustes"
+            android:exported="false"
+            android:screenOrientation="landscape"/>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="landscape">
-        </activity>
+            android:screenOrientation="landscape"></activity>
         <activity
             android:name=".Inicio"
             android:exported="true"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
