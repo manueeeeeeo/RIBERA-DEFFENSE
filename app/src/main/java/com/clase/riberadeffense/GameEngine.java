@@ -50,7 +50,11 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private int currentWave = 0;
 
     private Bitmap fondo;
+    private Bitmap nube;
+    private int nubeX;
     private Rect rectFondo;
+    private int screenWidth;
+    private int screenHeight;
 
     public GameEngine(Context context) {
         super(context);
@@ -61,6 +65,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             handler = new Handler();
 
             fondo = BitmapFactory.decodeResource(getResources(), R.drawable.fondo1);
+            nube = BitmapFactory.decodeResource(getResources(), R.drawable.nube);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -92,6 +97,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         if (fondo != null) {
             rectFondo = new Rect(0, 0, width, height);
+            screenWidth = width;
+            screenHeight = height;
+            nubeX = screenWidth;
         }
     }
 
@@ -138,6 +146,17 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         drawUI(canvas, paint);
+        drawNube(canvas);
+    }
+
+    private void drawNube(Canvas canvas) {
+        if (nube != null) {
+            canvas.drawBitmap(nube, nubeX, 50, null);
+            nubeX -= 5;
+            if (nubeX + nube.getWidth() < 0) {
+                nubeX = screenWidth;
+            }
+        }
     }
 
     private void drawUI(Canvas canvas, Paint paint) {
