@@ -56,10 +56,23 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private int screenWidth;
     private int screenHeight;
 
+    private int lives = 5;
+    private Bitmap[] lifeImages;
+    private int currentLifeImageIndex = 0;
+
     public GameEngine(Context context) {
         super(context);
         getHolder().addCallback(this);
         setFocusable(true);
+
+        lifeImages = new Bitmap[]{
+                BitmapFactory.decodeResource(getResources(), R.drawable.v55),
+                BitmapFactory.decodeResource(getResources(), R.drawable.v45),
+                BitmapFactory.decodeResource(getResources(), R.drawable.v35),
+                BitmapFactory.decodeResource(getResources(), R.drawable.v25),
+                BitmapFactory.decodeResource(getResources(), R.drawable.v15),
+                BitmapFactory.decodeResource(getResources(), R.drawable.v05)
+        };
         try {
             databaseHelper = new DatabaseHelper(context);
             handler = new Handler();
@@ -166,10 +179,25 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         String moneyText = "Monedas: " + money;
         paint.setTextSize(50);
         paint.setColor(Color.WHITE);
+
         canvas.drawText(moneyText, 50, 100, paint);
 
-        String waveText = "Oleada: " + (currentWave+1) + "/5";
-        canvas.drawText(waveText, 50, 170, paint);
+        String waveText = "Oleada: " + wave + "/5";
+        paint.setTextAlign(Paint.Align.RIGHT);
+        canvas.drawText(waveText, getWidth() - 50, 100, paint);
+        paint.setTextAlign(Paint.Align.LEFT);
+
+        if (lifeImages != null && currentLifeImageIndex < lifeImages.length) {
+            Bitmap lifeImage = lifeImages[currentLifeImageIndex];
+
+            int scaledWidth = lifeImage.getWidth() * 2;
+            int scaledHeight = lifeImage.getHeight() * 2;
+            Bitmap scaledLifeImage = Bitmap.createScaledBitmap(lifeImage, scaledWidth, scaledHeight, true);
+
+            int lifeImageX = 50;
+            int lifeImageY = 150;
+            canvas.drawBitmap(scaledLifeImage, lifeImageX, lifeImageY, null);
+        }
     }
 
     @Override
@@ -271,6 +299,15 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             if (enemy.getCurrentWaypointIndex() >= enemy.getWaypoints().size()) {
                 enemyIterator.remove();
                 showToast("¡Enemigo ha llegado al final!");
+
+                if (lives > 0) {
+                    lives--;
+                    currentLifeImageIndex = Math.min(currentLifeImageIndex + 1, lifeImages.length - 1);
+
+                    if (lives == 0) {
+                        showToast("¡Has perdido!");
+                    }
+                }
             }
         }
 
