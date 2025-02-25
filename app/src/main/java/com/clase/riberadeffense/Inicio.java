@@ -125,6 +125,7 @@ public class Inicio extends AppCompatActivity {
         btnJugar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                bd.resetDatabase();
                 ObjectAnimator scaleDown = ObjectAnimator.ofPropertyValuesHolder(
                         view,
                         PropertyValuesHolder.ofFloat(View.SCALE_X, 0.9f),

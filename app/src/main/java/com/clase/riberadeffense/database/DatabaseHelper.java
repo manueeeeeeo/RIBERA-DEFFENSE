@@ -203,4 +203,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TOWER_RAPIDEZ, attackSpeed);
         db.update(TABLE_TOWERS, values, COLUMN_TOWER_ID + "=?", new String[]{String.valueOf(towerId)});
     }
+
+    public void resetDatabase() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.delete(TABLE_TOWERS, null, null);
+        db.delete(TABLE_MONEY, null, null);
+
+        ContentValues moneyValues = new ContentValues();
+        moneyValues.put(COLUMN_ID, 1);
+        moneyValues.put(COLUMN_AMOUNT, 200);
+        db.insert(TABLE_MONEY, null, moneyValues);
+
+        initializeTowersIfNotExists(db);
+    }
 }
