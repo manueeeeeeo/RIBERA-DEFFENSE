@@ -151,8 +151,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     private void drawNube(Canvas canvas) {
         if (nube != null) {
-            canvas.drawBitmap(nube, nubeX, 50, null);
-            nubeX -= 5;
+            Paint paint = new Paint();
+            paint.setAlpha(128);
+            canvas.drawBitmap(nube, nubeX, 50, paint);
+            nubeX -= 2;
             if (nubeX + nube.getWidth() < 0) {
                 nubeX = screenWidth;
             }
