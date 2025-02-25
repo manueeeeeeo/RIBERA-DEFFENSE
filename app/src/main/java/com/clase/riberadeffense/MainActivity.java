@@ -1,5 +1,7 @@
 package com.clase.riberadeffense;
 
+import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -11,6 +13,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
+    private MediaPlayer mediaPlayer;
+    private boolean conMusica;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,5 +35,39 @@ public class MainActivity extends AppCompatActivity {
 
         decorView.setSystemUiVisibility(uiOptions);
         setContentView(new GameEngine(this));
+
+        sharedPreferences = getSharedPreferences("Preferencias", MODE_PRIVATE);
+        conMusica = sharedPreferences.getBoolean("musica", false);
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.musica_fondo);
+        mediaPlayer.setLooping(true);
+
+        if (conMusica) {
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mediaPlayer != null && conMusica) {
+            mediaPlayer.pause();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mediaPlayer != null && conMusica) {
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
     }
 }

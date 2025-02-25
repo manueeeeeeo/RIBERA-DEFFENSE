@@ -5,6 +5,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -23,6 +25,9 @@ public class Inicio extends AppCompatActivity {
     private ImageView btnAjustes = null;
     private ImageView btnSalir = null;
     private DatabaseHelper bd = null;
+    private MediaPlayer mediaPlayer;
+    private boolean conMusica;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,5 +163,38 @@ public class Inicio extends AppCompatActivity {
             }
         });
 
+        sharedPreferences = getSharedPreferences("Preferencias", MODE_PRIVATE);
+        conMusica = sharedPreferences.getBoolean("musica", false);
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.musica_fondo);
+        mediaPlayer.setLooping(true);
+
+        if (conMusica) {
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mediaPlayer != null && conMusica) {
+            mediaPlayer.pause();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mediaPlayer != null && conMusica) {
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
     }
 }
