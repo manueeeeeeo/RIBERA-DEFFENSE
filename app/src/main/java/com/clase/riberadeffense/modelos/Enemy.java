@@ -14,6 +14,9 @@ public abstract class Enemy {
     public int score;
     public int currentWaypointIndex = 0;
     public boolean isAlive = true;
+    private float speedMultiplier = 1.0f;
+    private long timeOnScreen = 0;
+    private long lastUpdateTime = System.currentTimeMillis();
 
     public Enemy(ArrayList<int[]> waypoints, int health, int speed, int score){
         this.waypoints = waypoints;
@@ -27,13 +30,19 @@ public abstract class Enemy {
     public void update() {
         if (!isAlive || currentWaypointIndex >= waypoints.size()) return;
 
+        timeOnScreen += System.currentTimeMillis() - lastUpdateTime;
+        lastUpdateTime = System.currentTimeMillis();
+
+        speedMultiplier = 1.0f + (timeOnScreen / 10000f);
+
+
         int[] targetWaypoint = waypoints.get(currentWaypointIndex);
         int targetX = targetWaypoint[0];
         int targetY = targetWaypoint[1];
 
         double angle = Math.atan2(targetY - y, targetX - x);
-        x += speed * Math.cos(angle);
-        y += speed * Math.sin(angle);
+        x += (speed * speedMultiplier) * Math.cos(angle);
+        y += (speed * speedMultiplier) * Math.sin(angle);
 
         double distance = Math.hypot(targetX - x, targetY - y);
         if (distance < 5) {

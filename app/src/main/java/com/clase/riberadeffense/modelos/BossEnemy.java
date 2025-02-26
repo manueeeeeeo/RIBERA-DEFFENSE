@@ -14,8 +14,8 @@ public class BossEnemy extends Enemy {
     private long lastFrameTime = 0;
     private static final long FRAME_DURATION = 200;
 
-    public BossEnemy(ArrayList<int[]> waypoints, int health, int speed, int score, Bitmap[] upAnimation, Bitmap[] downAnimation, Bitmap[] leftAnimation) {
-        super(waypoints, health, speed, score);
+    public BossEnemy(ArrayList<int[]> waypoints, int health, int speed, int score, Bitmap[] upAnimation, Bitmap[] downAnimation, Bitmap[] leftAnimation, int currentWave) {
+        super(waypoints, (int) (health * (1 + currentWave * 0.5)), (int) (speed * (1 + currentWave * 0.2)), score);
         this.upAnimation = upAnimation;
         this.downAnimation = downAnimation;
         this.leftAnimation = leftAnimation;

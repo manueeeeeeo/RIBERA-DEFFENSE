@@ -30,7 +30,6 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private MainThread thread;
     private List<Tower> towers;
     private DatabaseHelper databaseHelper;
-    private int wave = 1;
     private Handler handler;
     private List<Enemy> enemies = new ArrayList<>();
     private List<Projectile> projectiles = new ArrayList<>();
@@ -59,6 +58,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private int lives = 5;
     private Bitmap[] lifeImages;
     private int currentLifeImageIndex = 0;
+
+    private long lastBasicEnemySpawnTime = 0;
+    private long bossSpawnTime = 0;
 
     Bitmap[] upAnimationBasic = new Bitmap[]{
             BitmapFactory.decodeResource(getResources(), R.drawable.weaku1),
@@ -232,7 +234,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
         canvas.drawText(moneyText, 50, 100, paint);
 
-        String waveText = "Oleada: " + wave + "/5";
+        String waveText = "Oleada: " + (currentWave+1) + "/5";
         paint.setTextAlign(Paint.Align.RIGHT);
         canvas.drawText(waveText, getWidth() - 50, 100, paint);
         paint.setTextAlign(Paint.Align.LEFT);
@@ -332,13 +334,31 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     public void update() {
         long currentTime = System.currentTimeMillis();
 
-        if (!isBossWave && enemies.size() < ENEMIES_PER_WAVE && spawnedEnemies < ENEMIES_PER_WAVE) {
+        if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
             if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
                 ArrayList<int[]> path = crearCaminoEnemigo();
                 enemies.add(new BasicEnemy(path, 100, 2, 10, upAnimationBasic, downAnimationBasic, leftAnimationBasic));
                 lastSpawnTime = currentTime;
                 spawnedEnemies++;
+                lastBasicEnemySpawnTime = currentTime;
             }
+        }
+
+        if (!isBossWave && spawnedEnemies == ENEMIES_PER_WAVE && currentTime - lastBasicEnemySpawnTime >= BOSS_SPAWN_DELAY) {
+            ArrayList<int[]> path = crearCaminoEnemigo();
+            enemies.add(new BossEnemy(path, 500, 2, 50, upAnimationBoss, downAnimationBoss, leftAnimationBoss, currentWave));
+            isBossWave = true;
+            spawnedEnemies = 0;
+            bossSpawnTime = currentTime;
+            currentWave++;
+            if (currentWave > TOTAL_WAVES) {
+                showToast("¡Juego acabado!");
+            }
+        }
+
+        if (isBossWave && currentTime - bossSpawnTime >= 3000) {
+            isBossWave = false;
+            lastSpawnTime = currentTime;
         }
 
         Iterator<Enemy> enemyIterator = enemies.iterator();
@@ -353,28 +373,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                 if (lives > 0) {
                     lives--;
                     currentLifeImageIndex = Math.min(currentLifeImageIndex + 1, lifeImages.length - 1);
-
                     if (lives == 0) {
                         showToast("¡Has perdido!");
                     }
                 }
-            }
-        }
-
-        if (!isBossWave && enemies.isEmpty() && spawnedEnemies >= ENEMIES_PER_WAVE) {
-            isBossWave = true;
-            bossSpawnTimer = currentTime;
-        }
-
-        if (isBossWave && currentTime - bossSpawnTimer >= BOSS_SPAWN_DELAY) {
-            ArrayList<int[]> path = crearCaminoEnemigo();
-            enemies.add(new BossEnemy(path, 500, 2, 50, upAnimationBoss, downAnimationBoss, leftAnimationBoss));
-            isBossWave = false;
-            spawnedEnemies = 0;
-            currentWave++;
-
-            if (currentWave > TOTAL_WAVES) {
-                showToast("¡Juego acabado!");
             }
         }
 
