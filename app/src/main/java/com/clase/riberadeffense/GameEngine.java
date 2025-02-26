@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.MotionEvent;
@@ -44,7 +45,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private static final long BOSS_SPAWN_DELAY = 2500;
     private long bossSpawnTimer = 0;
     private boolean isBossWave = false;
-    private static final int ENEMIES_PER_WAVE = 30;
+    private static final int ENEMIES_PER_WAVE = 15;
     private static final int TOTAL_WAVES = 5;
     private int currentWave = 0;
 
@@ -61,6 +62,11 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     private long lastBasicEnemySpawnTime = 0;
     private long bossSpawnTime = 0;
+
+    private int currentFrame = 0;
+    private long lastFrameTime = 0;
+    private final int FRAME_DURATION = 125;
+    private Bitmap[] coinFrames;
 
     Bitmap[] upAnimationBasic = new Bitmap[]{
             BitmapFactory.decodeResource(getResources(), R.drawable.weaku1),
@@ -116,6 +122,15 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         super(context);
         getHolder().addCallback(this);
         setFocusable(true);
+
+        coinFrames = new Bitmap[]{
+                BitmapFactory.decodeResource(getResources(), R.drawable.moneda1),
+                BitmapFactory.decodeResource(getResources(), R.drawable.moneda2),
+                BitmapFactory.decodeResource(getResources(), R.drawable.moneda3),
+                BitmapFactory.decodeResource(getResources(), R.drawable.moneda4),
+                BitmapFactory.decodeResource(getResources(), R.drawable.moneda5),
+                BitmapFactory.decodeResource(getResources(), R.drawable.moneda6)
+        };
 
         lifeImages = new Bitmap[]{
                 BitmapFactory.decodeResource(getResources(), R.drawable.v55),
@@ -228,24 +243,35 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     private void drawUI(Canvas canvas, Paint paint) {
         int money = databaseHelper.getMoney();
-        String moneyText = "Monedas: " + money;
+        String moneyText = ": " + money;
         paint.setTextSize(50);
         paint.setColor(Color.WHITE);
+        paint.setTextAlign(Paint.Align.LEFT);
+        canvas.drawText(moneyText, 150, 100, paint);
 
-        canvas.drawText(moneyText, 50, 100, paint);
+        if (coinFrames != null && coinFrames.length > 0) {
+            Bitmap currentCoinFrame = coinFrames[currentFrame];
+            canvas.drawBitmap(currentCoinFrame, 50, 40, null);
+        }
 
-        String waveText = "Oleada: " + (currentWave+1) + "/5";
+        String waveText = (currentWave + 1) + "/5";
         paint.setTextAlign(Paint.Align.RIGHT);
         canvas.drawText(waveText, getWidth() - 50, 100, paint);
-        paint.setTextAlign(Paint.Align.LEFT);
+
+        Bitmap skullImage = BitmapFactory.decodeResource(getResources(), R.drawable.skull);
+
+        Bitmap scaledSkullImage = Bitmap.createScaledBitmap(skullImage, 80, 80, true);
+
+        int skullX = getWidth() - 220;
+        int skullY = 80 - (80 / 2);
+
+        canvas.drawBitmap(scaledSkullImage, skullX, skullY, null);
 
         if (lifeImages != null && currentLifeImageIndex < lifeImages.length) {
             Bitmap lifeImage = lifeImages[currentLifeImageIndex];
-
             int scaledWidth = lifeImage.getWidth() * 2;
             int scaledHeight = lifeImage.getHeight() * 2;
             Bitmap scaledLifeImage = Bitmap.createScaledBitmap(lifeImage, scaledWidth, scaledHeight, true);
-
             int lifeImageX = 50;
             int lifeImageY = 150;
             canvas.drawBitmap(scaledLifeImage, lifeImageX, lifeImageY, null);
@@ -333,6 +359,11 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     public void update() {
         long currentTime = System.currentTimeMillis();
+
+        if (currentTime - lastFrameTime >= FRAME_DURATION) {
+            currentFrame = (currentFrame + 1) % coinFrames.length; // Cambiar al siguiente frame
+            lastFrameTime = currentTime;
+        }
 
         if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
             if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
