@@ -278,10 +278,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     private void showTowerStats(Tower tower) {
         String stats = "Nivel: " + tower.getLevel() + "\n" +
-                "Daño: " + tower.getDamage() + "\n" +
+                "Daño: " + tower.getDamage() + "\n" +
                 "Rango: " + tower.getRange();
         new AlertDialog.Builder(getContext())
-                .setTitle("Estadísticas de la Torre")
+                .setTitle("Estadísticas de la Torre")
                 .setMessage(stats)
                 .setPositiveButton("Cerrar", null)
                 .show();
@@ -292,11 +292,11 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         String newStats;
         if(tower.getLevel()+1==1){
             newStats = "Nuevo Nivel: " + (tower.getLevel() + 1) + "\n" +
-                    "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
+                    "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
                     "Nuevo Rango: " + (tower.getRange() + 100);
         }else{
             newStats = "Nuevo Nivel: " + (tower.getLevel() + 1) + "\n" +
-                    "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
+                    "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
                     "Nuevo Rango: " + (tower.getRange() + 55);
         }
 
