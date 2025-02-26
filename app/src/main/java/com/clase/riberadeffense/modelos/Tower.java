@@ -183,13 +183,13 @@ public class Tower {
     public void upgradeTower() {
         level++;
         damage += 25;
-        attackSpeed = Math.max(10, attackSpeed - 1);
+        attackSpeed = Math.max(10, (int) (attackSpeed * 0.9));
         isUnlocked = true;
 
         if (level == 1) {
-            range += 100;
+            range += 150;
         } else {
-            range += 55;
+            range += 100;
         }
 
         DatabaseHelper dbHelper = new DatabaseHelper(contexto);

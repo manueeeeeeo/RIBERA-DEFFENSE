@@ -1,7 +1,9 @@
 package com.clase.riberadeffense;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -9,11 +11,16 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.clase.riberadeffense.modelos.BasicEnemy;
@@ -314,16 +321,16 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private void showUpgradeDialog(Tower tower) {
-        int upgradeCost = (tower.getLevel() + 1) * 60;
+        int upgradeCost = (tower.getLevel() + 1) * 75;
         String newStats;
         if(tower.getLevel()+1==1){
             newStats = "Nuevo Nivel: " + (tower.getLevel() + 1) + "\n" +
                     "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
-                    "Nuevo Rango: " + (tower.getRange() + 100);
+                    "Nuevo Rango: " + (tower.getRange() + 150);
         }else{
             newStats = "Nuevo Nivel: " + (tower.getLevel() + 1) + "\n" +
                     "Nuevo Daño: " + (tower.getDamage() + 25) + "\n" +
-                    "Nuevo Rango: " + (tower.getRange() + 55);
+                    "Nuevo Rango: " + (tower.getRange() + 100);
         }
 
         new AlertDialog.Builder(getContext())
@@ -335,7 +342,6 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                     if (money >= upgradeCost) {
                         databaseHelper.updateMoney(money - upgradeCost);
                         tower.upgradeTower();
-                        //databaseHelper.saveTower(tower);
                         Handler uiHandler = new Handler(getContext().getMainLooper());
                         uiHandler.post(() -> {
                             Canvas canvas = getHolder().lockCanvas();
@@ -357,11 +363,92 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                 .show();
     }
 
+    public void mostrarGanado(){
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(() -> {
+            View dialogoGanado = LayoutInflater.from(getContext()).inflate(R.layout.dialogo_ganado, null);
+            AlertDialog.Builder eleccionDialogo = new AlertDialog.Builder(getContext());
+            eleccionDialogo.setView(dialogoGanado);
+
+            final AlertDialog dialogo = eleccionDialogo.create();
+            dialogo.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialogo.setCancelable(false);
+            dialogo.show();
+
+            Button btnReiniciar = dialogo.findViewById(R.id.buttonContinue);
+            Button btnSalir = dialogo.findViewById(R.id.buttonExit);
+
+            btnReiniciar.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    reiniciarJuego();
+                    dialogo.dismiss();
+                }
+            });
+
+            btnSalir.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    volverAlInicio();
+                }
+            });
+        });
+    }
+
+    private void reiniciarJuego() {
+        Context context = getContext();
+        if (context instanceof Activity) {
+            View parentView = (View) getParent();
+            if (parentView != null) {
+                ((ViewGroup) parentView).removeView(this);
+            }
+            GameEngine newGameEngine = new GameEngine(context);
+            ((Activity) context).setContentView(newGameEngine);
+            newGameEngine.getHolder().addCallback(newGameEngine);
+            MainThread newThread = new MainThread(newGameEngine.getHolder(), newGameEngine);
+            newThread.setRunning(true);
+            newThread.start();
+        }
+    }
+
+    private void volverAlInicio() {
+        Context context = getContext();
+        if (context instanceof Activity) {
+            Intent intent = new Intent(context, Inicio.class);
+            ((Activity) context).finish();
+            context.startActivity(intent);
+        }
+    }
+
+    private void mostrarPerdido() {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(() -> {
+            View dialogoPerdido = LayoutInflater.from(getContext()).inflate(R.layout.dialogo_perdido, null);
+            AlertDialog.Builder eleccionDialogo = new AlertDialog.Builder(getContext());
+            eleccionDialogo.setView(dialogoPerdido);
+
+            final AlertDialog dialogo = eleccionDialogo.create();
+            dialogo.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialogo.setCancelable(false);
+            dialogo.show();
+
+            Button btnReiniciar = dialogo.findViewById(R.id.buttonContinue);
+            Button btnSalir = dialogo.findViewById(R.id.buttonExit);
+
+            btnReiniciar.setOnClickListener(view -> {
+                reiniciarJuego();
+                dialogo.dismiss();
+            });
+
+            btnSalir.setOnClickListener(view -> volverAlInicio());
+        });
+    }
+
     public void update() {
         long currentTime = System.currentTimeMillis();
 
         if (currentTime - lastFrameTime >= FRAME_DURATION) {
-            currentFrame = (currentFrame + 1) % coinFrames.length; // Cambiar al siguiente frame
+            currentFrame = (currentFrame + 1) % coinFrames.length;
             lastFrameTime = currentTime;
         }
 
@@ -383,7 +470,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             bossSpawnTime = currentTime;
             currentWave++;
             if (currentWave > TOTAL_WAVES) {
-                showToast("¡Juego acabado!");
+                if (thread != null) {
+                    thread.setRunning(false);
+                }
+                mostrarGanado();
             }
         }
 
@@ -399,13 +489,24 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
             if (enemy.getCurrentWaypointIndex() >= enemy.getWaypoints().size()) {
                 enemyIterator.remove();
-                showToast("¡Enemigo ha llegado al final!");
+
+                int reward = 0;
+                if (enemy instanceof BasicEnemy) {
+                    reward = 3;
+                } else if (enemy instanceof BossEnemy) {
+                    reward = 10;
+                }
+
+                databaseHelper.updateMoney(databaseHelper.getMoney() + reward);
 
                 if (lives > 0) {
                     lives--;
                     currentLifeImageIndex = Math.min(currentLifeImageIndex + 1, lifeImages.length - 1);
                     if (lives == 0) {
-                        showToast("¡Has perdido!");
+                        if (thread != null) {
+                            thread.setRunning(false);
+                        }
+                        mostrarPerdido();
                     }
                 }
             }
