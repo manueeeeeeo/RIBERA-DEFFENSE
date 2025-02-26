@@ -60,6 +60,56 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap[] lifeImages;
     private int currentLifeImageIndex = 0;
 
+    Bitmap[] upAnimationBasic = new Bitmap[]{
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaku1),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaku2),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaku3),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaku4),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaku5),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaku6)
+    };
+    Bitmap[] downAnimationBasic = new Bitmap[]{
+            BitmapFactory.decodeResource(getResources(), R.drawable.weakd1),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weakd2),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weakd3),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weakd4),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weakd5),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weakd6)
+    };
+    Bitmap[] leftAnimationBasic = new Bitmap[]{
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaki1),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaki2),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaki3),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaki4),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaki5),
+            BitmapFactory.decodeResource(getResources(), R.drawable.weaki6)
+    };
+
+    Bitmap[] upAnimationBoss = new Bitmap[]{
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongu1),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongu2),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongu3),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongu4),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongu5),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongu6)
+    };
+    Bitmap[] downAnimationBoss = new Bitmap[]{
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongd1),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongd2),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongd3),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongd4),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongd5),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongd6)
+    };
+    Bitmap[] leftAnimationBoss = new Bitmap[]{
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongi1),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongi2),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongi3),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongi4),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongi5),
+            BitmapFactory.decodeResource(getResources(), R.drawable.strongi6)
+    };
+
     public GameEngine(Context context) {
         super(context);
         getHolder().addCallback(this);
@@ -143,7 +193,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
         if (towers != null) {
             for (Tower tower : towers) {
-                tower.draw(canvas, paint);
+                tower.draw(canvas, new Paint());
             }
         } else {
             paint.setColor(Color.RED);
@@ -285,7 +335,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         if (!isBossWave && enemies.size() < ENEMIES_PER_WAVE && spawnedEnemies < ENEMIES_PER_WAVE) {
             if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
                 ArrayList<int[]> path = crearCaminoEnemigo();
-                enemies.add(new BasicEnemy(path, 100, 2, 10));
+                enemies.add(new BasicEnemy(path, 100, 2, 10, upAnimationBasic, downAnimationBasic, leftAnimationBasic));
                 lastSpawnTime = currentTime;
                 spawnedEnemies++;
             }
@@ -318,7 +368,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
         if (isBossWave && currentTime - bossSpawnTimer >= BOSS_SPAWN_DELAY) {
             ArrayList<int[]> path = crearCaminoEnemigo();
-            enemies.add(new BossEnemy(path, 500, 2, 50));
+            enemies.add(new BossEnemy(path, 500, 2, 50, upAnimationBoss, downAnimationBoss, leftAnimationBoss));
             isBossWave = false;
             spawnedEnemies = 0;
             currentWave++;

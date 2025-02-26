@@ -230,19 +230,14 @@ public class Tower {
 
         if (isAnimating && animationDrawable != null) {
             animationDrawable.setBounds((int) left, (int) top, (int) right, (int) bottom);
+
             if (!animationDrawable.isRunning()) {
                 animationDrawable.start();
             }
-            animationDrawable.draw(canvas);
 
-            if (contexto instanceof android.app.Activity) {
-                ((android.app.Activity) contexto).runOnUiThread(() -> {
-                });
-            }
-        } else {
-            if (towerImage != null) {
-                canvas.drawBitmap(towerImage, left, top, null);
-            }
+            animationDrawable.draw(canvas);
+        } else if (towerImage != null) {
+            canvas.drawBitmap(towerImage, left, top, null);
         }
     }
 
