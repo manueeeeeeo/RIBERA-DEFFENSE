@@ -159,7 +159,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             databaseHelper = new DatabaseHelper(context);
             handler = new Handler();
 
-            fondo = BitmapFactory.decodeResource(getResources(), R.drawable.fondo1);
+            fondo = BitmapFactory.decodeResource(getResources(), R.drawable.fondojuego);
             nube = BitmapFactory.decodeResource(getResources(), R.drawable.nube);
         } catch (Exception e) {
             e.printStackTrace();
