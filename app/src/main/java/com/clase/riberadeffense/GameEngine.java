@@ -33,6 +33,8 @@ import com.clase.riberadeffense.database.DatabaseHelper;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private MainThread thread;
@@ -67,6 +69,8 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap[] lifeImages;
     private int currentLifeImageIndex = 0;
 
+    private Handler uiHandler;
+
     private long lastBasicEnemySpawnTime = 0;
     private long bossSpawnTime = 0;
 
@@ -74,6 +78,8 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private long lastFrameTime = 0;
     private final int FRAME_DURATION = 125;
     private Bitmap[] coinFrames;
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     Bitmap[] upAnimationBasic = new Bitmap[]{
             BitmapFactory.decodeResource(getResources(), R.drawable.weaku1),
@@ -129,6 +135,8 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         super(context);
         getHolder().addCallback(this);
         setFocusable(true);
+
+        uiHandler = new Handler(Looper.getMainLooper());
 
         coinFrames = new Bitmap[]{
                 BitmapFactory.decodeResource(getResources(), R.drawable.moneda1),
@@ -444,6 +452,12 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         });
     }
 
+    private void updateMoneyInBackground(int reward) {
+        executor.execute(() -> {
+            databaseHelper.updateMoney(databaseHelper.getMoney() + reward);
+        });
+    }
+
     public void update() {
         long currentTime = System.currentTimeMillis();
 
@@ -452,110 +466,118 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             lastFrameTime = currentTime;
         }
 
-        if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
-            if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
+        synchronized (enemies) {
+            if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
+                if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
+                    ArrayList<int[]> path = crearCaminoEnemigo();
+                    enemies.add(new BasicEnemy(path, 100, 2, 10, upAnimationBasic, downAnimationBasic, leftAnimationBasic));
+                    lastSpawnTime = currentTime;
+                    spawnedEnemies++;
+                    lastBasicEnemySpawnTime = currentTime;
+                }
+            }
+
+            if (!isBossWave && spawnedEnemies == ENEMIES_PER_WAVE && currentTime - lastBasicEnemySpawnTime >= BOSS_SPAWN_DELAY) {
                 ArrayList<int[]> path = crearCaminoEnemigo();
-                enemies.add(new BasicEnemy(path, 100, 2, 10, upAnimationBasic, downAnimationBasic, leftAnimationBasic));
+                enemies.add(new BossEnemy(path, 500, 2, 50, upAnimationBoss, downAnimationBoss, leftAnimationBoss, currentWave));
+                isBossWave = true;
+                spawnedEnemies = 0;
+                bossSpawnTime = currentTime;
+                currentWave++;
+                if (currentWave > TOTAL_WAVES) {
+                    if (thread != null) {
+                        thread.setRunning(false);
+                    }
+                    uiHandler.post(this::mostrarGanado);
+                }
+            }
+
+            if (isBossWave && currentTime - bossSpawnTime >= 3000) {
+                isBossWave = false;
                 lastSpawnTime = currentTime;
-                spawnedEnemies++;
-                lastBasicEnemySpawnTime = currentTime;
             }
-        }
 
-        if (!isBossWave && spawnedEnemies == ENEMIES_PER_WAVE && currentTime - lastBasicEnemySpawnTime >= BOSS_SPAWN_DELAY) {
-            ArrayList<int[]> path = crearCaminoEnemigo();
-            enemies.add(new BossEnemy(path, 500, 2, 50, upAnimationBoss, downAnimationBoss, leftAnimationBoss, currentWave));
-            isBossWave = true;
-            spawnedEnemies = 0;
-            bossSpawnTime = currentTime;
-            currentWave++;
-            if (currentWave > TOTAL_WAVES) {
-                if (thread != null) {
-                    thread.setRunning(false);
-                }
-                mostrarGanado();
-            }
-        }
+            Iterator<Enemy> enemyIterator = enemies.iterator();
+            while (enemyIterator.hasNext()) {
+                Enemy enemy = enemyIterator.next();
+                enemy.update();
 
-        if (isBossWave && currentTime - bossSpawnTime >= 3000) {
-            isBossWave = false;
-            lastSpawnTime = currentTime;
-        }
+                if (enemy.getCurrentWaypointIndex() >= enemy.getWaypoints().size()) {
+                    enemyIterator.remove();
 
-        Iterator<Enemy> enemyIterator = enemies.iterator();
-        while (enemyIterator.hasNext()) {
-            Enemy enemy = enemyIterator.next();
-            enemy.update();
+                    int reward = 0;
+                    if (enemy instanceof BasicEnemy) {
+                        reward = 3;
+                    } else if (enemy instanceof BossEnemy) {
+                        reward = 10;
+                    }
 
-            if (enemy.getCurrentWaypointIndex() >= enemy.getWaypoints().size()) {
-                enemyIterator.remove();
+                    final int finalReward = reward;
+                    updateMoneyInBackground(finalReward);
 
-                int reward = 0;
-                if (enemy instanceof BasicEnemy) {
-                    reward = 3;
-                } else if (enemy instanceof BossEnemy) {
-                    reward = 10;
-                }
-
-                databaseHelper.updateMoney(databaseHelper.getMoney() + reward);
-
-                if (lives > 0) {
-                    lives--;
-                    currentLifeImageIndex = Math.min(currentLifeImageIndex + 1, lifeImages.length - 1);
-                    if (lives == 0) {
-                        if (thread != null) {
-                            thread.setRunning(false);
+                    if (lives > 0) {
+                        lives--;
+                        currentLifeImageIndex = Math.min(currentLifeImageIndex + 1, lifeImages.length - 1);
+                        if (lives == 0) {
+                            if (thread != null) {
+                                thread.setRunning(false);
+                            }
+                            uiHandler.post(this::mostrarPerdido);
                         }
-                        mostrarPerdido();
                     }
                 }
             }
         }
 
-        Iterator<Projectile> projectileIterator = projectiles.iterator();
-        while (projectileIterator.hasNext()) {
-            Projectile projectile = projectileIterator.next();
-            projectile.update();
+        synchronized (projectiles) {
+            Iterator<Projectile> projectileIterator = projectiles.iterator();
+            while (projectileIterator.hasNext()) {
+                Projectile projectile = projectileIterator.next();
+                projectile.update();
 
-            if (!projectile.isActive()) {
-                projectileIterator.remove();
+                if (!projectile.isActive()) {
+                    projectileIterator.remove();
+                }
             }
         }
 
-        for (Tower tower : towers) {
-            if (!tower.canShoot()) continue;
+        synchronized (towers) {
+            for (Tower tower : towers) {
+                if (!tower.canShoot()) continue;
 
-            Enemy target = null;
-
-            for (Enemy enemy : enemies) {
-                if (tower.isEnemyInRange(enemy)) {
-                    target = enemy;
-                    break;
-                }
-            }
-
-            if (target != null) {
-                boolean hasActiveProjectile = false;
-                for (Projectile projectile : projectiles) {
-                    if (projectile.getTarget() == target) {
-                        hasActiveProjectile = true;
+                Enemy target = null;
+                for (Enemy enemy : enemies) {
+                    if (tower.isEnemyInRange(enemy)) {
+                        target = enemy;
                         break;
                     }
                 }
 
-                if (!hasActiveProjectile) {
-                    projectiles.add(new Projectile(tower.getX(), tower.getY(), target, tower.getDamage()));
-                    tower.shoot();
+                if (target != null) {
+                    boolean hasActiveProjectile = false;
+                    for (Projectile projectile : projectiles) {
+                        if (projectile.getTarget() == target) {
+                            hasActiveProjectile = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasActiveProjectile) {
+                        projectiles.add(new Projectile(tower.getX(), tower.getY(), target, tower.getDamage()));
+                        tower.shoot();
+                    }
                 }
             }
-        }
 
-        enemyIterator = enemies.iterator();
-        while (enemyIterator.hasNext()) {
-            Enemy enemy = enemyIterator.next();
-            if (!enemy.isAlive()) {
-                enemyIterator.remove();
-                databaseHelper.updateMoney(databaseHelper.getMoney() + 3);
+            Iterator<Enemy> enemyIterator = enemies.iterator();
+            while (enemyIterator.hasNext()) {
+                Enemy enemy = enemyIterator.next();
+                if (!enemy.isAlive()) {
+                    enemyIterator.remove();
+                    Executors.newSingleThreadExecutor().execute(() -> {
+                        databaseHelper.updateMoney(databaseHelper.getMoney() + 3);
+                    });
+                }
             }
         }
     }
