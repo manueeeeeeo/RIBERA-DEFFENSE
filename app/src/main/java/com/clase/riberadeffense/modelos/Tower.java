@@ -29,10 +29,15 @@ public class Tower {
     private int height;
     private long lastShotTime = 0;
 
+    private int baseWidth;
+    private int baseHeight;
+    private float baseAspectRatio;
+    private static final float SCALE_FACTOR = 1.2f;
+
     private AnimationDrawable animationDrawable;
     private boolean isAnimating = false;
 
-    public Tower(int x, int y, int range, int level, int damage, int attackSpeed, int id, Context contexto){
+    public Tower(int x, int y, int range, int level, int damage, int attackSpeed, int id, Context contexto) {
         this.x = x;
         this.y = y;
         this.range = range;
@@ -42,27 +47,53 @@ public class Tower {
         this.id = id;
         this.contexto = contexto;
 
+        Bitmap baseTowerImage = BitmapFactory.decodeResource(contexto.getResources(), R.drawable.tower0);
+        if (baseTowerImage != null) {
+            this.baseWidth = baseTowerImage.getWidth();
+            this.baseHeight = baseTowerImage.getHeight();
+            this.baseAspectRatio = (float) baseWidth / baseHeight;
+        } else {
+            Log.e("Tower", "La imagen base (tower0) no se pudo cargar.");
+        }
+
         if (level == 1) {
-            recursoTower = R.drawable.tower11;
-            towerImage = BitmapFactory.decodeResource(contexto.getResources(), recursoTower);
-            if (towerImage != null) {
-                this.width = towerImage.getWidth();
-                this.height = towerImage.getHeight();
-            } else {
-                Log.e("Tower", "La imagen de la torre no se pudo cargar.");
-            }
+            loadTowerImage(R.drawable.tower11);
         } else if (level == 2 || level == 3) {
             setAnimation(level);
             startAnimation();
         } else {
-            recursoTower = R.drawable.tower0;
-            towerImage = BitmapFactory.decodeResource(contexto.getResources(), recursoTower);
-            if (towerImage != null) {
-                this.width = towerImage.getWidth();
-                this.height = towerImage.getHeight();
+            loadBaseTowerImage(R.drawable.tower0);
+        }
+    }
+
+    private void loadBaseTowerImage(int resource) {
+        towerImage = BitmapFactory.decodeResource(contexto.getResources(), resource);
+        if (towerImage != null) {
+            this.width = baseWidth;
+            this.height = baseHeight;
+        } else {
+            Log.e("Tower", "La imagen base (tower0) no se pudo cargar.");
+        }
+    }
+
+    private void loadTowerImage(int resource) {
+        towerImage = BitmapFactory.decodeResource(contexto.getResources(), resource);
+        if (towerImage != null) {
+            int originalWidth = towerImage.getWidth();
+            int originalHeight = towerImage.getHeight();
+            float originalAspectRatio = (float) originalWidth / originalHeight;
+
+            if (originalAspectRatio > baseAspectRatio) {
+                this.width = (int) (baseWidth * SCALE_FACTOR);
+                this.height = (int) (this.width / originalAspectRatio);
             } else {
-                Log.e("Tower", "La imagen de la torre no se pudo cargar.");
+                this.height = (int) (baseHeight * SCALE_FACTOR);
+                this.width = (int) (this.height * originalAspectRatio);
             }
+
+            towerImage = Bitmap.createScaledBitmap(towerImage, (int) this.width, this.height, true);
+        } else {
+            Log.e("Tower", "La imagen de la torre no se pudo cargar.");
         }
     }
 
@@ -78,8 +109,9 @@ public class Tower {
         } else {
             animationDrawable.setOneShot(false);
             isAnimating = true;
-            this.width = 200;
-            this.height = 200;
+
+            this.width = (int) (baseWidth * SCALE_FACTOR);
+            this.height = (int) (baseHeight * SCALE_FACTOR);
             startAnimation();
         }
     }
@@ -201,12 +233,7 @@ public class Tower {
         if (level == 2 || level == 3) {
             setAnimation(level);
         } else {
-            recursoTower = R.drawable.tower11;
-            towerImage = BitmapFactory.decodeResource(contexto.getResources(), recursoTower);
-            if (towerImage != null) {
-                this.width = towerImage.getWidth();
-                this.height = towerImage.getHeight();
-            }
+            loadTowerImage(R.drawable.tower11);
         }
 
         x = (int)centerX;

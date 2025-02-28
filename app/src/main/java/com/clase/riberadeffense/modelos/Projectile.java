@@ -8,7 +8,7 @@ public class Projectile {
     private int x;
     private int y;
     private Enemy target;
-    private int speed = 6;
+    private int speed = 12;
     private boolean isActive = true;
     private int damage;
 

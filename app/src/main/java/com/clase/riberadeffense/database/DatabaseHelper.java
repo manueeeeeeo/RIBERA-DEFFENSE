@@ -30,10 +30,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_TOWER_X = "tower_x";
     private static final String COLUMN_TOWER_Y = "tower_y";
 
+    private Context contexto = null;
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         SQLiteDatabase db = this.getWritableDatabase();
         initializeTowersIfNotExists(db);
+        this.contexto = context;
     }
 
     @Override
@@ -58,7 +61,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Insertar dinero inicial
         ContentValues values = new ContentValues();
         values.put(COLUMN_ID, 1);
-        values.put(COLUMN_AMOUNT, 200); // Dinero inicial
+        values.put(COLUMN_AMOUNT, 500); // Dinero inicial
         db.insert(TABLE_MONEY, null, values);
     }
 
@@ -72,6 +75,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void initializeTowersIfNotExists(SQLiteDatabase db) {
         Cursor cursor = db.query(TABLE_TOWERS, new String[]{COLUMN_TOWER_ID}, null, null, null, null, null);
         if (cursor != null && cursor.getCount() == 0) {
+
+            int screenWidth = 0;
+            int screenHeight = 0;
+
+            if (contexto != null) {
+                screenWidth = contexto.getResources().getDisplayMetrics().widthPixels;
+                screenHeight = contexto.getResources().getDisplayMetrics().heightPixels;
+            }
+
             // No hay torres en la base de datos, insertar las torres iniciales
             ContentValues values = new ContentValues();
             values.put(COLUMN_TOWER_ID, 1);
@@ -79,8 +91,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(COLUMN_TOWER_DANO, 0);
             values.put(COLUMN_TOWER_RANGO, 0);
             values.put(COLUMN_TOWER_RAPIDEZ, 0);
-            values.put(COLUMN_TOWER_X, 200);
-            values.put(COLUMN_TOWER_Y, 300);
+            values.put(COLUMN_TOWER_X, screenWidth - 572);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 - 360);
             db.insert(TABLE_TOWERS, null, values);
 
             values.clear();
@@ -89,8 +101,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(COLUMN_TOWER_DANO, 0);
             values.put(COLUMN_TOWER_RANGO, 0);
             values.put(COLUMN_TOWER_RAPIDEZ, 0);
-            values.put(COLUMN_TOWER_X, 800);
-            values.put(COLUMN_TOWER_Y, 500);
+            values.put(COLUMN_TOWER_X, screenWidth - 765);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 + 180);
             db.insert(TABLE_TOWERS, null, values);
 
             values.clear();
@@ -99,8 +111,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(COLUMN_TOWER_DANO, 0);
             values.put(COLUMN_TOWER_RANGO, 0);
             values.put(COLUMN_TOWER_RAPIDEZ, 0);
-            values.put(COLUMN_TOWER_X, 1200);
-            values.put(COLUMN_TOWER_Y, 700);
+            values.put(COLUMN_TOWER_X, screenWidth - 1320);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 - 125);
             db.insert(TABLE_TOWERS, null, values);
 
             values.clear();
@@ -109,8 +121,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(COLUMN_TOWER_DANO, 0);
             values.put(COLUMN_TOWER_RANGO, 0);
             values.put(COLUMN_TOWER_RAPIDEZ, 0);
-            values.put(COLUMN_TOWER_X, 600);
-            values.put(COLUMN_TOWER_Y, 900);
+            values.put(COLUMN_TOWER_X, screenWidth - 1560);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 + 130);
             db.insert(TABLE_TOWERS, null, values);
 
             values.clear();
@@ -119,8 +131,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(COLUMN_TOWER_DANO, 0);
             values.put(COLUMN_TOWER_RANGO, 0);
             values.put(COLUMN_TOWER_RAPIDEZ, 0);
-            values.put(COLUMN_TOWER_X, 1500);
-            values.put(COLUMN_TOWER_Y, 200);
+            values.put(COLUMN_TOWER_X, screenWidth - 1990);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 + 180);
             db.insert(TABLE_TOWERS, null, values);
         }
         if (cursor != null) cursor.close();
@@ -154,13 +166,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void saveTower(Tower tower) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
+        int screenWidth = 0;
+        int screenHeight = 0;
+
+        if (contexto != null) {
+            screenWidth = contexto.getResources().getDisplayMetrics().widthPixels;
+            screenHeight = contexto.getResources().getDisplayMetrics().heightPixels;
+        }
         values.put(COLUMN_TOWER_ID, tower.getId());
         values.put(COLUMN_TOWER_LEVEL, tower.getLevel());
         values.put(COLUMN_TOWER_DANO, tower.getDamage());
         values.put(COLUMN_TOWER_RANGO, tower.getRange());
         values.put(COLUMN_TOWER_RAPIDEZ, tower.getAttackSpeed());
-        values.put(COLUMN_TOWER_X, tower.getX());
-        values.put(COLUMN_TOWER_Y, tower.getY());
+        if(tower.getId()==1){
+            values.put(COLUMN_TOWER_X, screenWidth - 572);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 - 360);
+        }else if(tower.getId()==2){
+            values.put(COLUMN_TOWER_X, screenWidth - 765);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 + 180);
+        }else if(tower.getId()==3){
+            values.put(COLUMN_TOWER_X, screenWidth - 1320);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 - 125);
+        }else if(tower.getId()==4){
+            values.put(COLUMN_TOWER_X, screenWidth - 1560);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 + 130);
+        }else if(tower.getId()==5){
+            values.put(COLUMN_TOWER_X, screenWidth - 1990);
+            values.put(COLUMN_TOWER_Y, screenHeight / 2 + 180);
+        }
 
         db.insertWithOnConflict(TABLE_TOWERS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
     }
@@ -212,7 +245,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         ContentValues moneyValues = new ContentValues();
         moneyValues.put(COLUMN_ID, 1);
-        moneyValues.put(COLUMN_AMOUNT, 200);
+        moneyValues.put(COLUMN_AMOUNT, 500);
         db.insert(TABLE_MONEY, null, moneyValues);
 
         initializeTowersIfNotExists(db);

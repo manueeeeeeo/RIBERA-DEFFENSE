@@ -79,7 +79,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private final int FRAME_DURATION = 125;
     private Bitmap[] coinFrames;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private Bitmap capaBackground = null;
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
     Bitmap[] upAnimationBasic = new Bitmap[]{
             BitmapFactory.decodeResource(getResources(), R.drawable.weaku1),
@@ -131,6 +133,8 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             BitmapFactory.decodeResource(getResources(), R.drawable.strongi6)
     };
 
+    private volatile boolean resourcesLoaded = false;
+
     public GameEngine(Context context) {
         super(context);
         getHolder().addCallback(this);
@@ -155,12 +159,19 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                 BitmapFactory.decodeResource(getResources(), R.drawable.v15),
                 BitmapFactory.decodeResource(getResources(), R.drawable.v05)
         };
+
         try {
             databaseHelper = new DatabaseHelper(context);
             handler = new Handler();
 
             fondo = BitmapFactory.decodeResource(getResources(), R.drawable.fondojuego);
             nube = BitmapFactory.decodeResource(getResources(), R.drawable.nube);
+
+            if (fondo == null || nube == null) {
+                throw new RuntimeException("Error al cargar recursos gráficos.");
+            }
+
+            resourcesLoaded = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -169,13 +180,16 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         try {
-            thread = new MainThread(holder, this);
-            thread.setRunning(true);
-            thread.start();
+            if (thread == null || !thread.isAlive()) {
+                thread = new MainThread(holder, this);
+                thread.setRunning(true);
+                thread.start();
+            }
+
             towers = databaseHelper.getAllTowers(getContext());
 
             for (Tower tower : towers) {
-                if(tower.getLevel() == 2 && tower.getLevel() == 3){
+                if (tower.getLevel() >= 2) {
                     tower.startAnimation();
                 }
             }
@@ -191,11 +205,15 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         if (fondo != null) {
-            rectFondo = new Rect(0, 0, width, height);
-            screenWidth = width;
-            screenHeight = height;
-            nubeX = screenWidth;
+            capaBackground = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas cacheCanvas = new Canvas(capaBackground);
+
+            cacheCanvas.drawBitmap(fondo, null, new Rect(0, 0, width, height), null);
         }
+
+        screenWidth = width;
+        screenHeight = height;
+        nubeX = screenWidth;
     }
 
     @Override
@@ -203,24 +221,30 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         boolean retry = true;
         while (retry) {
             try {
-                thread.setRunning(false);
-                thread.join();
+                if (thread != null) {
+                    thread.setRunning(false);
+                    thread.join();
+                }
+                retry = false;
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            retry = false;
         }
+        thread = null;
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
+        if (!resourcesLoaded) {
+            return;
+        }
 
         Paint paint = new Paint();
         canvas.drawColor(Color.BLACK);
 
-        if (fondo != null && rectFondo != null) {
-            canvas.drawBitmap(fondo, null, rectFondo, null);
+        if (capaBackground != null) {
+            canvas.drawBitmap(capaBackground, 0, 0, null);
         }
 
         if (towers != null) {
@@ -466,6 +490,14 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             lastFrameTime = currentTime;
         }
 
+        executor.execute(() -> updateEnemies(currentTime));
+
+        executor.execute(() -> updateProjectiles());
+
+        updateTowers();
+    }
+
+    private void updateEnemies(long currentTime) {
         synchronized (enemies) {
             if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
                 if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
@@ -484,6 +516,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                 spawnedEnemies = 0;
                 bossSpawnTime = currentTime;
                 currentWave++;
+
                 if (currentWave > TOTAL_WAVES) {
                     if (thread != null) {
                         thread.setRunning(false);
@@ -528,7 +561,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         }
+    }
 
+    private void updateProjectiles() {
         synchronized (projectiles) {
             Iterator<Projectile> projectileIterator = projectiles.iterator();
             while (projectileIterator.hasNext()) {
@@ -540,7 +575,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         }
+    }
 
+    private void updateTowers() {
         synchronized (towers) {
             for (Tower tower : towers) {
                 if (!tower.canShoot()) continue;
@@ -574,7 +611,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                 Enemy enemy = enemyIterator.next();
                 if (!enemy.isAlive()) {
                     enemyIterator.remove();
-                    Executors.newSingleThreadExecutor().execute(() -> {
+                    executor.execute(() -> {
                         databaseHelper.updateMoney(databaseHelper.getMoney() + 3);
                     });
                 }
@@ -590,16 +627,15 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private ArrayList<int[]> crearCaminoEnemigo() {
         ArrayList<int[]> path = new ArrayList<>();
         path.add(new int[]{getWidth() - 100, getHeight() / 2});
-        path.add(new int[]{getWidth() - 300, getHeight() / 2});
-        path.add(new int[]{getWidth() - 300, getHeight() / 2 + 200});
-        path.add(new int[]{getWidth() - 600, getHeight() / 2 + 200});
-        path.add(new int[]{getWidth() - 600, getHeight() / 2 - 150});
-        path.add(new int[]{getWidth() - 900, getHeight() / 2 - 150});
-        path.add(new int[]{getWidth() - 900, getHeight() / 2 + 100});
-        path.add(new int[]{getWidth() - 1100, getHeight() / 2 + 100});
-        path.add(new int[]{getWidth() - 1100, getHeight() / 2 - 100});
-        path.add(new int[]{getWidth() - 1400, getHeight() / 2 - 100});
-        path.add(new int[]{getWidth() - 1400, getHeight() / 2});
+        path.add(new int[]{getWidth() - 450, getHeight() / 2});
+        path.add(new int[]{getWidth() - 450, getHeight() / 2 - 270});
+        path.add(new int[]{getWidth() - 730, getHeight() / 2 - 270});
+        path.add(new int[]{getWidth() - 730, getHeight() / 2});
+        path.add(new int[]{getWidth() - 1330, getHeight() / 2});
+        path.add(new int[]{getWidth() - 1330, getHeight() / 2 + 225});
+        path.add(new int[]{getWidth() - 1765, getHeight() / 2 + 225});
+        path.add(new int[]{getWidth() - 1765, getHeight() / 2});
+        path.add(new int[]{getWidth() - 1950, getHeight() / 2});
         path.add(new int[]{100, getHeight() / 2});
         return path;
     }
@@ -608,6 +644,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         private SurfaceHolder surfaceHolder;
         private GameEngine gameEngine;
         private boolean running;
+
+        private static final int MAX_FPS = 60;
+        private static final long FRAME_TIME = 1000 / MAX_FPS;
 
         public MainThread(SurfaceHolder surfaceHolder, GameEngine gameEngine) {
             super();
@@ -621,14 +660,25 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
         @Override
         public void run() {
-            Canvas canvas;
+            long startTime;
+            long timeMillis;
+            long waitTime;
+            int frameCount = 0;
+            long totalTime = 0;
+            long targetTime = 1000 / MAX_FPS;
+
+            Canvas canvas = null;
+
             while (running) {
-                canvas = null;
+                startTime = System.currentTimeMillis();
+
                 try {
-                    canvas = this.surfaceHolder.lockCanvas();
-                    synchronized (surfaceHolder) {
-                        gameEngine.update(); // Actualizar el estado del juego
-                        gameEngine.draw(canvas); // Dibujar el estado actual
+                    canvas = surfaceHolder.lockCanvas();
+                    if (canvas != null) {
+                        synchronized (surfaceHolder) {
+                            gameEngine.update();
+                            gameEngine.draw(canvas);
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -640,6 +690,26 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                             e.printStackTrace();
                         }
                     }
+                }
+
+                timeMillis = System.currentTimeMillis() - startTime;
+                waitTime = targetTime - timeMillis;
+
+                if (waitTime > 0) {
+                    try {
+                        Thread.sleep(waitTime);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                totalTime += System.currentTimeMillis() - startTime;
+                frameCount++;
+
+                if (totalTime >= 1000) {
+                    System.out.println("FPS: " + frameCount);
+                    frameCount = 0;
+                    totalTime = 0;
                 }
             }
         }
