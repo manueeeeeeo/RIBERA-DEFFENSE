@@ -11,12 +11,14 @@ public class Projectile {
     private int speed = 12;
     private boolean isActive = true;
     private int damage;
+    private long creationTime;
 
     public Projectile(int startX, int startY, Enemy target, int damage) {
         this.x = startX;
         this.y = startY;
         this.target = target;
         this.damage = damage;
+        this.creationTime = System.currentTimeMillis();
     }
 
     public void draw(Canvas canvas, Paint paint) {
@@ -28,11 +30,19 @@ public class Projectile {
     public void update() {
         if (target == null || !isActive) return;
 
+        long elapsedTime = System.currentTimeMillis() - creationTime;
+
+        if (elapsedTime > 2000) {
+            isActive = false;
+            return;
+        }
+
         double angle = Math.atan2(target.getY() - y, target.getX() - x);
         x += speed * Math.cos(angle);
         y += speed * Math.sin(angle);
 
         double distance = Math.hypot(target.getX() - x, target.getY() - y);
+
         if (distance < 20) {
             target.takeDamage(damage);
             isActive = false;

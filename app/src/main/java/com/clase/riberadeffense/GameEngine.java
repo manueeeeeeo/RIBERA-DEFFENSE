@@ -293,7 +293,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawBitmap(currentCoinFrame, 50, 40, null);
         }
 
-        String waveText = (currentWave + 1) + "/5";
+        String waveText = (currentWave) + "/5";
         paint.setTextAlign(Paint.Align.RIGHT);
         canvas.drawText(waveText, getWidth() - 50, 100, paint);
 
@@ -365,34 +365,44 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                     "Nuevo Rango: " + (tower.getRange() + 100);
         }
 
-        new AlertDialog.Builder(getContext())
-                .setTitle("Mejorar Torre")
-                .setMessage("Costo: " + upgradeCost + " monedas\n\n" +
-                        "Mejoras:\n" + newStats)
-                .setPositiveButton("Mejorar", (dialog, which) -> {
-                    int money = databaseHelper.getMoney();
-                    if (money >= upgradeCost) {
-                        databaseHelper.updateMoney(money - upgradeCost);
-                        tower.upgradeTower();
-                        Handler uiHandler = new Handler(getContext().getMainLooper());
-                        uiHandler.post(() -> {
-                            Canvas canvas = getHolder().lockCanvas();
-                            if (canvas != null) {
-                                towers = databaseHelper.getAllTowers(getContext());
-                                drawUI(canvas, new Paint());
-                                getHolder().unlockCanvasAndPost(canvas);
-                            }
-                        });
-                    } else {
-                        new AlertDialog.Builder(getContext())
-                                .setTitle("Error")
-                                .setMessage("No tienes suficiente dinero")
-                                .setPositiveButton("Cerrar", null)
-                                .show();
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+        if(tower.getLevel()+1>3){
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Limite de Nivel de Torre")
+                    .setMessage("Está torre ha llegado a su nivel limite para este juego")
+                    .setPositiveButton("Okey!!!", null)
+                    .show();
+        }else{
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Mejorar Torre")
+                    .setMessage("Costo: " + upgradeCost + " monedas\n\n" +
+                            "Mejoras:\n" + newStats)
+                    .setPositiveButton("Mejorar", (dialog, which) -> {
+                        int money = databaseHelper.getMoney();
+                        if (money >= upgradeCost) {
+                            databaseHelper.updateMoney(money - upgradeCost);
+                            tower.startUpgrade();
+                            Handler handler = new Handler(Looper.getMainLooper());
+                            handler.postDelayed(() -> {
+                                tower.upgradeTower();
+
+                                Canvas canvas = getHolder().lockCanvas();
+                                if (canvas != null) {
+                                    towers = databaseHelper.getAllTowers(getContext());
+                                    drawUI(canvas, new Paint());
+                                    getHolder().unlockCanvasAndPost(canvas);
+                                }
+                            }, 1550);
+                        } else {
+                            new AlertDialog.Builder(getContext())
+                                    .setTitle("Error")
+                                    .setMessage("No tienes suficiente dinero")
+                                    .setPositiveButton("Cerrar", null)
+                                    .show();
+                        }
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        }
     }
 
     public void mostrarGanado(){
@@ -413,6 +423,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             btnReiniciar.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    databaseHelper.resetDatabase();
                     reiniciarJuego();
                     dialogo.dismiss();
                 }
@@ -468,6 +479,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             Button btnSalir = dialogo.findViewById(R.id.buttonExit);
 
             btnReiniciar.setOnClickListener(view -> {
+                databaseHelper.resetDatabase();
                 reiniciarJuego();
                 dialogo.dismiss();
             });
@@ -499,29 +511,42 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
     private void updateEnemies(long currentTime) {
         synchronized (enemies) {
-            if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
-                if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
-                    ArrayList<int[]> path = crearCaminoEnemigo();
-                    enemies.add(new BasicEnemy(path, 100, 2, 10, upAnimationBasic, downAnimationBasic, leftAnimationBasic));
-                    lastSpawnTime = currentTime;
-                    spawnedEnemies++;
-                    lastBasicEnemySpawnTime = currentTime;
+            if (currentWave == 5) {
+                if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
+                    // Aquí no hacemos nada porque no se deben generar nuevos enemigos
                 }
-            }
 
-            if (!isBossWave && spawnedEnemies == ENEMIES_PER_WAVE && currentTime - lastBasicEnemySpawnTime >= BOSS_SPAWN_DELAY) {
-                ArrayList<int[]> path = crearCaminoEnemigo();
-                enemies.add(new BossEnemy(path, 500, 2, 50, upAnimationBoss, downAnimationBoss, leftAnimationBoss, currentWave));
-                isBossWave = true;
-                spawnedEnemies = 0;
-                bossSpawnTime = currentTime;
-                currentWave++;
-
-                if (currentWave > TOTAL_WAVES) {
+                if (enemies.isEmpty()) {
                     if (thread != null) {
                         thread.setRunning(false);
                     }
                     uiHandler.post(this::mostrarGanado);
+                }
+            } else {
+                if (!isBossWave && spawnedEnemies < ENEMIES_PER_WAVE) {
+                    if (currentTime - lastSpawnTime >= SPAWN_INTERVAL) {
+                        ArrayList<int[]> path = crearCaminoEnemigo();
+                        enemies.add(new BasicEnemy(path, 100, 2, 10, upAnimationBasic, downAnimationBasic, leftAnimationBasic));
+                        lastSpawnTime = currentTime;
+                        spawnedEnemies++;
+                        lastBasicEnemySpawnTime = currentTime;
+                    }
+                }
+
+                if (!isBossWave && spawnedEnemies == ENEMIES_PER_WAVE && currentTime - lastBasicEnemySpawnTime >= BOSS_SPAWN_DELAY) {
+                    ArrayList<int[]> path = crearCaminoEnemigo();
+                    enemies.add(new BossEnemy(path, 500, 2, 50, upAnimationBoss, downAnimationBoss, leftAnimationBoss, currentWave));
+                    isBossWave = true;
+                    spawnedEnemies = 0;
+                    bossSpawnTime = currentTime;
+                    currentWave++;
+
+                    if (currentWave == TOTAL_WAVES && enemies.isEmpty()) {
+                        if (thread != null) {
+                            thread.setRunning(false);
+                        }
+                        uiHandler.post(this::mostrarGanado);
+                    }
                 }
             }
 
@@ -540,9 +565,9 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
 
                     int reward = 0;
                     if (enemy instanceof BasicEnemy) {
-                        reward = 3;
+                        reward = 6;
                     } else if (enemy instanceof BossEnemy) {
-                        reward = 10;
+                        reward = 20;
                     }
 
                     final int finalReward = reward;
@@ -562,6 +587,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
     }
+
 
     private void updateProjectiles() {
         synchronized (projectiles) {
@@ -646,7 +672,6 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         private boolean running;
 
         private static final int MAX_FPS = 60;
-        private static final long FRAME_TIME = 1000 / MAX_FPS;
 
         public MainThread(SurfaceHolder surfaceHolder, GameEngine gameEngine) {
             super();

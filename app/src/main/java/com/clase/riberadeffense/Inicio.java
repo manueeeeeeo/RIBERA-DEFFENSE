@@ -2,6 +2,7 @@ package com.clase.riberadeffense;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.content.Intent;
@@ -28,6 +29,7 @@ public class Inicio extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     private boolean conMusica;
     private SharedPreferences sharedPreferences;
+    private ImageView titulo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,21 @@ public class Inicio extends AppCompatActivity {
         btnJugar = (ImageView) findViewById(R.id.imageViewPlay);
         btnAjustes = (ImageView) findViewById(R.id.imageViewMenu);
         btnSalir = (ImageView) findViewById(R.id.imageViewExit);
+        titulo = (ImageView) findViewById(R.id.imageView);
+
+        ObjectAnimator temblorX = ObjectAnimator.ofFloat(titulo, "translationX", -10f, 10f);
+        temblorX.setRepeatCount(ObjectAnimator.INFINITE);
+        temblorX.setRepeatMode(ObjectAnimator.REVERSE);
+        temblorX.setDuration(100);
+
+        ObjectAnimator parpadeo = ObjectAnimator.ofFloat(titulo, "alpha", 0f, 1f);
+        parpadeo.setRepeatCount(ObjectAnimator.INFINITE);
+        parpadeo.setRepeatMode(ObjectAnimator.REVERSE);
+        parpadeo.setDuration(500);
+
+        AnimatorSet animaciones = new AnimatorSet();
+        animaciones.playTogether(temblorX, parpadeo);
+        animaciones.start();
 
         bd = new DatabaseHelper(this);
 

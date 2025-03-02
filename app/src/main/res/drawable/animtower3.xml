@@ -7,39 +7,4 @@
     <item android:drawable="@drawable/tower34" android:duration="225"/>
     <item android:drawable="@drawable/tower35" android:duration="225"/>
     <item android:drawable="@drawable/tower36" android:duration="225"/>
-
-    <item android:drawable="@drawable/tower31" android:duration="225"/>
-    <item android:drawable="@drawable/tower32" android:duration="225"/>
-    <item android:drawable="@drawable/tower33" android:duration="225"/>
-    <item android:drawable="@drawable/tower34" android:duration="225"/>
-    <item android:drawable="@drawable/tower35" android:duration="225"/>
-    <item android:drawable="@drawable/tower36" android:duration="225"/>
-
-    <item android:drawable="@drawable/tower31" android:duration="225"/>
-    <item android:drawable="@drawable/tower32" android:duration="225"/>
-    <item android:drawable="@drawable/tower33" android:duration="225"/>
-    <item android:drawable="@drawable/tower34" android:duration="225"/>
-    <item android:drawable="@drawable/tower35" android:duration="225"/>
-    <item android:drawable="@drawable/tower36" android:duration="225"/>
-
-    <item android:drawable="@drawable/tower31" android:duration="225"/>
-    <item android:drawable="@drawable/tower32" android:duration="225"/>
-    <item android:drawable="@drawable/tower33" android:duration="225"/>
-    <item android:drawable="@drawable/tower34" android:duration="225"/>
-    <item android:drawable="@drawable/tower35" android:duration="225"/>
-    <item android:drawable="@drawable/tower36" android:duration="225"/>
-
-    <item android:drawable="@drawable/tower31" android:duration="225"/>
-    <item android:drawable="@drawable/tower32" android:duration="225"/>
-    <item android:drawable="@drawable/tower33" android:duration="225"/>
-    <item android:drawable="@drawable/tower34" android:duration="225"/>
-    <item android:drawable="@drawable/tower35" android:duration="225"/>
-    <item android:drawable="@drawable/tower36" android:duration="225"/>
-
-    <item android:drawable="@drawable/tower31" android:duration="225"/>
-    <item android:drawable="@drawable/tower32" android:duration="225"/>
-    <item android:drawable="@drawable/tower33" android:duration="225"/>
-    <item android:drawable="@drawable/tower34" android:duration="225"/>
-    <item android:drawable="@drawable/tower35" android:duration="225"/>
-    <item android:drawable="@drawable/tower36" android:duration="225"/>
 </animation-list>
