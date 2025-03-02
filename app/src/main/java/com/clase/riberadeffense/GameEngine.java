@@ -10,7 +10,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.os.Looper;
@@ -37,7 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
-    private MainThread thread;
+    private BucleJuego thread;
     private List<Tower> towers;
     private DatabaseHelper databaseHelper;
     private Handler handler;
@@ -181,7 +180,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         try {
             if (thread == null || !thread.isAlive()) {
-                thread = new MainThread(holder, this);
+                thread = new BucleJuego(holder, this);
                 thread.setRunning(true);
                 thread.start();
             }
@@ -448,7 +447,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             GameEngine newGameEngine = new GameEngine(context);
             ((Activity) context).setContentView(newGameEngine);
             newGameEngine.getHolder().addCallback(newGameEngine);
-            MainThread newThread = new MainThread(newGameEngine.getHolder(), newGameEngine);
+            BucleJuego newThread = new BucleJuego(newGameEngine.getHolder(), newGameEngine);
             newThread.setRunning(true);
             newThread.start();
         }
@@ -666,14 +665,14 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         return path;
     }
 
-    private class MainThread extends Thread {
+    private class BucleJuego extends Thread {
         private SurfaceHolder surfaceHolder;
         private GameEngine gameEngine;
         private boolean running;
 
         private static final int MAX_FPS = 60;
 
-        public MainThread(SurfaceHolder surfaceHolder, GameEngine gameEngine) {
+        public BucleJuego(SurfaceHolder surfaceHolder, GameEngine gameEngine) {
             super();
             this.surfaceHolder = surfaceHolder;
             this.gameEngine = gameEngine;
