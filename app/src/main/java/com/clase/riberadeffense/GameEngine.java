@@ -814,7 +814,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
                     enemyIterator.remove();
                     // Actualizamos con el execturo las monedas
                     executor.execute(() -> {
-                        databaseHelper.updateMoney(databaseHelper.getMoney() + 3);
+                        databaseHelper.updateMoney(databaseHelper.getMoney() + 6);
                     });
                 }
             }
