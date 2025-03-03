@@ -69,7 +69,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Insertar dinero inicial
         ContentValues values = new ContentValues();
         values.put(COLUMN_ID, 1);
-        values.put(COLUMN_AMOUNT, 250);
+        values.put(COLUMN_AMOUNT, 280);
         db.insert(TABLE_MONEY, null, values);
     }
 
@@ -269,7 +269,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Donde guardo el id de la columna del dinero
         moneyValues.put(COLUMN_ID, 1);
         // Y el valor de las monedas de esa fila
-        moneyValues.put(COLUMN_AMOUNT, 250);
+        moneyValues.put(COLUMN_AMOUNT, 280);
         // Inserto y creo la nueva tabla
         db.insert(TABLE_MONEY, null, moneyValues);
 
