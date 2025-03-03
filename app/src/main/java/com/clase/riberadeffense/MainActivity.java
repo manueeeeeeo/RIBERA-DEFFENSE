@@ -13,9 +13,10 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
-    private MediaPlayer mediaPlayer;
-    private boolean conMusica;
-    private SharedPreferences sharedPreferences;
+    // Creamos e inicializamos todas las variables de obtejos que vamos a usar en esta clase
+    private MediaPlayer mediaPlayer = null;
+    private boolean conMusica = false;
+    private SharedPreferences sharedPreferences = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,13 +37,19 @@ public class MainActivity extends AppCompatActivity {
         decorView.setSystemUiVisibility(uiOptions);
         setContentView(new GameEngine(this));
 
+        // Inicializamos las preferencias
         sharedPreferences = getSharedPreferences("Preferencias", MODE_PRIVATE);
+        // Guardamos en una variable el resultado obtenido de preferencias, si no existe por defecto es falso
         conMusica = sharedPreferences.getBoolean("musica", false);
 
+        // Inicializamos correctamente el mediaPlayer y establecemos el recurso que vamos a utilizar
         mediaPlayer = MediaPlayer.create(this, R.raw.musica_fondo);
+        // Establecemos que la canción se repita en loop
         mediaPlayer.setLooping(true);
 
-        if (conMusica) {
+        // Comprobamos si la variable de jugar con música es verdadera
+        if (conMusica) { // Si así es
+            // Iniciamos el reproductor de música
             mediaPlayer.start();
         }
     }

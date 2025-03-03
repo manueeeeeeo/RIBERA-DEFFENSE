@@ -22,13 +22,14 @@ import androidx.core.view.WindowInsetsCompat;
 import com.clase.riberadeffense.database.DatabaseHelper;
 
 public class Inicio extends AppCompatActivity {
+    // Creamos e inicializamos todas las variables de obtejos que vamos a usar en esta clase
     private ImageView btnJugar = null;
     private ImageView btnAjustes = null;
     private ImageView btnSalir = null;
     private DatabaseHelper bd = null;
-    private MediaPlayer mediaPlayer;
-    private boolean conMusica;
-    private SharedPreferences sharedPreferences;
+    private MediaPlayer mediaPlayer = null;
+    private boolean conMusica = false;
+    private SharedPreferences sharedPreferences = null;
     private ImageView titulo = null;
 
     @Override
@@ -58,20 +59,32 @@ public class Inicio extends AppCompatActivity {
         btnSalir = (ImageView) findViewById(R.id.imageViewExit);
         titulo = (ImageView) findViewById(R.id.imageView);
 
+        // Creamos un objectanimator para trasladar la imageview en el eje x
         ObjectAnimator temblorX = ObjectAnimator.ofFloat(titulo, "translationX", -10f, 10f);
+        // Esteblecemos que sea infinito
         temblorX.setRepeatCount(ObjectAnimator.INFINITE);
+        // Establecemos que se ejecute de un lado a otro, es decir, a la inversa cada vez
         temblorX.setRepeatMode(ObjectAnimator.REVERSE);
+        // Establecemos la duración de la animación
         temblorX.setDuration(100);
 
+        // Creamos un objectanimator para ejecutar el parpadeo del titulo
         ObjectAnimator parpadeo = ObjectAnimator.ofFloat(titulo, "alpha", 0f, 1f);
+        // Esteblecemos que sea infinito
         parpadeo.setRepeatCount(ObjectAnimator.INFINITE);
+        // Establecemos que sea a la reversa también
         parpadeo.setRepeatMode(ObjectAnimator.REVERSE);
+        // Establecemos la duración de la animación
         parpadeo.setDuration(500);
 
+        // Generamos el animator set para ejecutar las animaciones
         AnimatorSet animaciones = new AnimatorSet();
+        // Ejecutamos ambas a la vez
         animaciones.playTogether(temblorX, parpadeo);
+        // Iniciamos la ejecucción
         animaciones.start();
 
+        // Inicializamos la base de datos
         bd = new DatabaseHelper(this);
 
         // Evento de cuando pulsamos el botón de salir
@@ -147,7 +160,7 @@ public class Inicio extends AppCompatActivity {
         btnJugar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                bd.resetDatabase();
+                bd.resetDatabase(); // Reiniciamos la base de datos
                 ObjectAnimator scaleDown = ObjectAnimator.ofPropertyValuesHolder(
                         view,
                         PropertyValuesHolder.ofFloat(View.SCALE_X, 0.9f),
@@ -180,13 +193,19 @@ public class Inicio extends AppCompatActivity {
             }
         });
 
+        // Inicializamos las preferencias
         sharedPreferences = getSharedPreferences("Preferencias", MODE_PRIVATE);
+        // Guardamos en una variable el resultado obtenido de preferencias, si no existe por defecto es falso
         conMusica = sharedPreferences.getBoolean("musica", false);
 
+        // Inicializamos correctamente el mediaPlayer y establecemos el recurso que vamos a utilizar
         mediaPlayer = MediaPlayer.create(this, R.raw.musica_fondo);
+        // Establecemos que la canción se repita en loop
         mediaPlayer.setLooping(true);
 
-        if (conMusica) {
+        // Comprobamos si la variable de jugar con música es verdadera
+        if (conMusica) { // Si así es
+            // Iniciamos el reproductor de música
             mediaPlayer.start();
         }
     }
