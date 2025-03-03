@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false">
+    <item android:drawable="@drawable/moneda1" android:duration="125"/>
+    <item android:drawable="@drawable/moneda2" android:duration="125"/>
+    <item android:drawable="@drawable/moneda3" android:duration="125"/>
+    <item android:drawable="@drawable/moneda4" android:duration="125"/>
+    <item android:drawable="@drawable/moneda5" android:duration="125"/>
+    <item android:drawable="@drawable/moneda6" android:duration="125"/>
+
+    <item android:drawable="@drawable/moneda1" android:duration="125"/>
+    <item android:drawable="@drawable/moneda2" android:duration="125"/>
+    <item android:drawable="@drawable/moneda3" android:duration="125"/>
+    <item android:drawable="@drawable/moneda4" android:duration="125"/>
+    <item android:drawable="@drawable/moneda5" android:duration="125"/>
+    <item android:drawable="@drawable/moneda6" android:duration="125"/>
+
+    <item android:drawable="@drawable/moneda1" android:duration="125"/>
+    <item android:drawable="@drawable/moneda2" android:duration="125"/>
+    <item android:drawable="@drawable/moneda3" android:duration="125"/>
+    <item android:drawable="@drawable/moneda4" android:duration="125"/>
+    <item android:drawable="@drawable/moneda5" android:duration="125"/>
+    <item android:drawable="@drawable/moneda6" android:duration="125"/>
+
+    <item android:drawable="@drawable/moneda1" android:duration="125"/>
+    <item android:drawable="@drawable/moneda2" android:duration="125"/>
+    <item android:drawable="@drawable/moneda3" android:duration="125"/>
+    <item android:drawable="@drawable/moneda4" android:duration="125"/>
+    <item android:drawable="@drawable/moneda5" android:duration="125"/>
+    <item android:drawable="@drawable/moneda6" android:duration="125"/>
+
+</animation-list>
