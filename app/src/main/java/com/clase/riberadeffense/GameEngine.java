@@ -13,6 +13,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -519,34 +520,93 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     /**
-     * Método con el cerramos el game engine
-     * actual y creamos otro, dando la sensación
-     * de que el juego se ha reiniciado*/
-    private void reiniciarJuego() {
+     * Método en donde paramos todo lo actual
+     * para poder volver al inicio y liberar
+     * recursos para que el juego siga yendo rapido
+     * y fluido*/
+    private void volverAlInicio() {
+        if (thread != null) {
+            thread.setRunning(false);
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            thread = null;
+        }
+
+        if (fondo != null) {
+            fondo.recycle();
+            fondo = null;
+        }
+        if (capaBackground != null) {
+            capaBackground.recycle();
+            capaBackground = null;
+        }
+
+        if (towers != null) {
+            towers.clear();
+            towers = null;
+        }
+        if (enemies != null) {
+            enemies.clear();
+            enemies = null;
+        }
+        if (projectiles != null) {
+            projectiles.clear();
+            projectiles = null;
+        }
+
         Context context = getContext();
         if (context instanceof Activity) {
-            View parentView = (View) getParent();
-            if (parentView != null) {
-                ((ViewGroup) parentView).removeView(this);
-            }
-            GameEngine newGameEngine = new GameEngine(context);
-            ((Activity) context).setContentView(newGameEngine);
-            newGameEngine.getHolder().addCallback(newGameEngine);
-            BucleJuego newThread = new BucleJuego(newGameEngine.getHolder(), newGameEngine);
-            newThread.setRunning(true);
-            newThread.start();
+            Intent intent = new Intent(context, Inicio.class);
+            context.startActivity(intent);
+            ((Activity) context).finish();
         }
     }
 
     /**
-     * Método con el que volvemos
-     * a la actividad del inicio*/
-    private void volverAlInicio() {
+     * Método con el cerramos el game engine
+     * actual y creamos otro, dando la sensación
+     * de que el juego se ha reiniciado*/
+    private void reiniciarJuego() {
+        if (thread != null) {
+            thread.setRunning(false);
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            thread = null;
+        }
+
+        if (fondo != null) {
+            fondo.recycle();
+            fondo = null;
+        }
+        if (capaBackground != null) {
+            capaBackground.recycle();
+            capaBackground = null;
+        }
+
+        if (towers != null) {
+            towers.clear();
+            towers = null;
+        }
+        if (enemies != null) {
+            enemies.clear();
+            enemies = null;
+        }
+        if (projectiles != null) {
+            projectiles.clear();
+            projectiles = null;
+        }
+
         Context context = getContext();
         if (context instanceof Activity) {
-            Intent intent = new Intent(context, Inicio.class);
-            ((Activity) context).finish();
+            Intent intent = new Intent(context, MainActivity.class);
             context.startActivity(intent);
+            ((Activity) context).finish();
         }
     }
 
