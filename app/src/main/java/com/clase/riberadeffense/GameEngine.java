@@ -38,10 +38,10 @@ import java.util.concurrent.Executors;
 
 public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     // Creamos todas las variables que vamos a usar en esta clase
-    private BucleJuego thread;
-    private List<Tower> towers;
-    private DatabaseHelper databaseHelper;
-    private Handler handler;
+    private BucleJuego thread = null;
+    private List<Tower> towers = new ArrayList<>();
+    private DatabaseHelper databaseHelper = null;
+    private Handler handler = null;
     private List<Enemy> enemies = new ArrayList<>();
     private List<Projectile> projectiles = new ArrayList<>();
     private long lastClickTime = 0;
@@ -59,17 +59,17 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
     private static final int TOTAL_WAVES = 5;
     private int currentWave = 0;
 
-    private Bitmap fondo;
-    private Bitmap nube;
-    private int nubeX;
-    private int screenWidth;
-    private int screenHeight;
+    private Bitmap fondo = null;
+    private Bitmap nube = null;
+    private int nubeX = 0;
+    private int screenWidth = 0;
+    private int screenHeight = 0;
 
     private int lives = 5;
     private Bitmap[] lifeImages;
     private int currentLifeImageIndex = 0;
 
-    private Handler uiHandler;
+    private Handler uiHandler = null;
 
     private long lastBasicEnemySpawnTime = 0;
     private long bossSpawnTime = 0;
@@ -245,6 +245,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         // En caso de que no se hayan cargado los recursos
         if (!resourcesLoaded) {
             // Retornamos sin hacer nada
+            return;
+        }
+
+        if (canvas == null) {
             return;
         }
 
@@ -524,7 +528,7 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
      * para poder volver al inicio y liberar
      * recursos para que el juego siga yendo rapido
      * y fluido*/
-    private void volverAlInicio() {
+    public void volverAlInicio() {
         if (thread != null) {
             thread.setRunning(false);
             try {
@@ -555,6 +559,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         if (projectiles != null) {
             projectiles.clear();
             projectiles = null;
+        }
+
+        if (executor != null) {
+            executor.shutdown();
         }
 
         Context context = getContext();
@@ -602,6 +610,10 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
             projectiles = null;
         }
 
+        if (executor != null) {
+            executor.shutdown();
+        }
+
         Context context = getContext();
         if (context instanceof Activity) {
             Intent intent = new Intent(context, MainActivity.class);
@@ -643,7 +655,11 @@ public class GameEngine extends SurfaceView implements SurfaceHolder.Callback {
         // Utilizamos el executor para actualizar las monedas en la base de datos en un hilo por detras para no
         // sobrecargar el hilo principal
         executor.execute(() -> {
-            databaseHelper.updateMoney(databaseHelper.getMoney() + reward);
+            try {
+                databaseHelper.updateMoney(databaseHelper.getMoney() + reward);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
